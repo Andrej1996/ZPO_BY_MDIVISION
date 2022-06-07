@@ -1,0 +1,370 @@
+*&---------------------------------------------------------------------*
+*& Report  ZPO_BY_MDIVISION
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+REPORT zpo_by_mdivision.
+
+*Program tables
+TABLES: ekko, ekpo, lfa1, mara.
+
+
+*Program definition
+TYPES: BEGIN OF st_ekko_ekpo_lfa1_mara,
+
+         ebeln TYPE ekko-ebeln,     "Purchasing Doc.
+         bukrs TYPE ekko-bukrs,     "Company Code
+         bsart TYPE ekko-bsart,     "Document Type
+         lifnr TYPE ekko-lifnr,     "Vendor
+         ekorg TYPE ekko-ekorg,     "Purchasing Org.
+         ekgrp TYPE ekko-ekgrp,     "Purch. Group
+         aedat TYPE ekko-aedat,     "Created on
+         bedat TYPE ekko-bedat,     "Doc. Date
+         waers TYPE ekko-waers,     "Currency
+
+         ebelp TYPE ekpo-ebelp,     "Item
+         matnr TYPE ekpo-matnr,     "Material
+         txz01 TYPE ekpo-txz01,     "Short Text
+         werks TYPE ekpo-werks,     "Plant
+         lgort TYPE ekpo-lgort,     "Stor. Location
+         matkl TYPE ekpo-matkl,     "Material Group
+         bprme TYPE ekpo-bprme,     "Order Price
+         menge TYPE ekpo-menge,     "PO Quantity
+         meins TYPE ekpo-meins,     "Order Unit
+         netpr TYPE ekpo-netpr,     "Net Price
+         peinh TYPE ekpo-peinh,     "Price Unit
+         netwr TYPE ekpo-netwr,     "Net Value
+         loekz TYPE ekpo-loekz,     "Deletion Ind.
+
+         name1 TYPE lfa1-name1,     "Name
+
+         spart TYPE mara-spart,     "Division
+
+
+       END OF st_ekko_ekpo_lfa1_mara.
+
+
+
+
+DATA: it_ekko_ekpo_lfa1_mara TYPE TABLE OF st_ekko_ekpo_lfa1_mara,
+      wa_ekko_ekpo_lfa1_mara TYPE st_ekko_ekpo_lfa1_mara.
+
+
+DATA: t_fieldcat TYPE slis_t_fieldcat_alv WITH HEADER LINE.
+
+DATA: w_callback_subroutine TYPE slis_formname,
+      w_callback_program    LIKE sy-repid,
+      gd_layout             TYPE slis_layout_alv.
+
+
+
+*Program selection
+SELECTION-SCREEN: BEGIN OF BLOCK b1 WITH FRAME TITLE text-001.
+
+SELECT-OPTIONS:
+                s_bukrs FOR ekko-bukrs,
+                s_ekorg FOR ekko-ekorg,
+                s_lifnr FOR ekko-lifnr,
+                s_bsart FOR ekko-bsart,
+                s_matnr FOR ekpo-matnr,
+                s_spart FOR mara-spart,
+                s_aedat FOR ekko-aedat,
+                s_loekz FOR ekpo-loekz.
+
+SELECTION-SCREEN: END OF BLOCK b1.
+
+
+
+START-OF-SELECTION.
+
+  PERFORM output_data.
+
+  PERFORM build_catalog.
+
+  PERFORM display_data.
+
+
+END-OF-SELECTION.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM display_data .
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+*     I_INTERFACE_CHECK       = ' '
+*     I_BYPASSING_BUFFER      = ' '
+*     I_BUFFER_ACTIVE         = ' '
+      i_callback_program      = sy-cprog
+*     I_CALLBACK_PF_STATUS_SET          = ' '
+      i_callback_user_command = w_callback_subroutine
+*     I_CALLBACK_TOP_OF_PAGE  = ' '
+*     I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*     I_CALLBACK_HTML_END_OF_LIST       = ' '
+*     I_STRUCTURE_NAME        =
+*     I_BACKGROUND_ID         = ' '
+*     I_GRID_TITLE            =
+*     I_GRID_SETTINGS         =
+      is_layout               = gd_layout
+      it_fieldcat             = t_fieldcat[]
+*     IT_EXCLUDING            =
+*     IT_SPECIAL_GROUPS       =
+*     IT_SORT                 =
+*     IT_FILTER               =
+*     IS_SEL_HIDE             =
+*     I_DEFAULT               = 'X'
+*     I_SAVE                  = ' '
+*     IS_VARIANT              =
+*     IT_EVENTS               =
+*     IT_EVENT_EXIT           =
+*     IS_PRINT                =
+*     IS_REPREP_ID            =
+*     I_SCREEN_START_COLUMN   = 0
+*     I_SCREEN_START_LINE     = 0
+*     I_SCREEN_END_COLUMN     = 0
+*     I_SCREEN_END_LINE       = 0
+*     I_HTML_HEIGHT_TOP       = 0
+*     I_HTML_HEIGHT_END       = 0
+*     IT_ALV_GRAPHICS         =
+*     IT_HYPERLINK            =
+*     IT_ADD_FIELDCAT         =
+*     IT_EXCEPT_QINFO         =
+*     IR_SALV_FULLSCREEN_ADAPTER        =
+*   IMPORTING
+*     E_EXIT_CAUSED_BY_CALLER =
+*     ES_EXIT_CAUSED_BY_USER  =
+    TABLES
+      t_outtab                = it_ekko_ekpo_lfa1_mara
+    EXCEPTIONS
+      program_error           = 1
+      OTHERS                  = 2.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  OUTPUT_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM output_data .
+
+  SELECT ekko~ebeln
+         ekko~bukrs
+         ekko~bsart
+         ekko~lifnr
+         ekko~ekorg
+         ekko~ekgrp
+         ekko~aedat
+         ekko~bedat
+         ekko~waers
+
+         ekpo~ebelp
+         ekpo~matnr
+         ekpo~txz01
+         ekpo~werks
+         ekpo~lgort
+         ekpo~matkl
+         ekpo~bprme
+         ekpo~menge
+         ekpo~meins
+         ekpo~netpr
+         ekpo~peinh
+         ekpo~netwr
+         ekpo~loekz
+
+         lfa1~name1
+         mara~spart
+
+         INTO TABLE it_ekko_ekpo_lfa1_mara FROM ekko AS ekko INNER JOIN lfa1 AS lfa1 ON lfa1~lifnr = ekko~lifnr
+                                                             INNER JOIN ekpo AS ekpo ON ekpo~ebeln = ekko~ebeln
+                                                             INNER JOIN mara AS mara ON mara~matnr = ekpo~matnr
+                                                             WHERE ekko~aedat IN s_aedat
+                                                               AND ekko~bsart IN s_bsart
+                                                               AND mara~spart IN s_spart
+                                                               AND ekpo~matnr IN s_matnr
+                                                               AND ekko~lifnr IN s_lifnr
+                                                               AND ekko~bukrs IN s_bukrs
+                                                               AND ekko~ekorg IN s_ekorg
+                                                               AND ekpo~loekz IN s_loekz.
+
+
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  BUILD_CATALOG
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM build_catalog .
+
+  t_fieldcat-fieldname = 'BSART'.
+  t_fieldcat-seltext_m = 'Document Type'.
+  t_fieldcat-col_pos = 1.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'EKGRP'.
+  t_fieldcat-seltext_m = 'Purch. Group'.
+  t_fieldcat-col_pos = 2.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'BUKRS'.
+  t_fieldcat-seltext_m = 'Company Code'.
+  t_fieldcat-col_pos = 3.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'EKORG'.
+  t_fieldcat-seltext_m = 'Purchasing Org'.
+  t_fieldcat-col_pos = 4.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'LIFNR'.
+  t_fieldcat-seltext_m = 'Vendor'.
+  t_fieldcat-col_pos = 5.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'NAME1'.
+  t_fieldcat-seltext_m = 'Name'.
+  t_fieldcat-outputlen = '30'.
+  t_fieldcat-col_pos = 6.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'EBELN'.
+  t_fieldcat-seltext_m = 'Purchasing Doc.'.
+  t_fieldcat-col_pos = 7.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'EBELP'.
+  t_fieldcat-seltext_m = 'Item'.
+  t_fieldcat-col_pos = 8.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'LOEKZ'.
+  t_fieldcat-seltext_m = 'Deletion Ind'.
+  t_fieldcat-col_pos = 9.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'MATNR'.
+  t_fieldcat-seltext_m = 'Material'.
+  t_fieldcat-col_pos = 10.
+  t_fieldcat-no_zero = 'X'.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'TXZ01'.
+  t_fieldcat-seltext_m = 'Short Text'.
+  t_fieldcat-outputlen = '50'.
+  t_fieldcat-col_pos = 11.
+  t_fieldcat-no_zero = 'X'.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'WERKS'.
+  t_fieldcat-seltext_m = 'Plant'.
+  t_fieldcat-col_pos = 12.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'LGORT'.
+  t_fieldcat-seltext_m = 'Stor. Location'.
+  t_fieldcat-col_pos = 13.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'MENGE'.
+  t_fieldcat-seltext_m = 'PO Quantity'.
+  t_fieldcat-col_pos = 14.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'MEINS'.
+  t_fieldcat-seltext_m = 'Order Unit'.
+  t_fieldcat-col_pos = 15.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'NETPR'.
+  t_fieldcat-seltext_m = 'Net Price'.
+  t_fieldcat-col_pos = 16.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'WAERS'.
+  t_fieldcat-seltext_m = 'Currency'.
+  t_fieldcat-col_pos = 17.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'PEINH'.
+  t_fieldcat-seltext_m = 'Price Unit'.
+  t_fieldcat-col_pos = 18.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'BPRME'.
+  t_fieldcat-seltext_m = 'Order Price'.
+  t_fieldcat-col_pos = 19.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'NETWR'.
+  t_fieldcat-seltext_m = 'Net Value'.
+  t_fieldcat-col_pos = 20.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'AEDAT'.
+  t_fieldcat-seltext_m = 'Created on'.
+  t_fieldcat-col_pos = 21.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'BEDAT'.
+  t_fieldcat-seltext_m = 'Doc. Date'.
+  t_fieldcat-col_pos = 22.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'SPART'.
+  t_fieldcat-seltext_m = 'Division'.
+  t_fieldcat-col_pos = 23.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+  t_fieldcat-fieldname = 'MATKL'.
+  t_fieldcat-seltext_m = 'Material Group'.
+  t_fieldcat-col_pos = 24.
+  APPEND t_fieldcat TO t_fieldcat.
+  CLEAR t_fieldcat.
+
+ENDFORM.
